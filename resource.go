@@ -31,15 +31,6 @@ import (
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
 )
 
-const (
-	ClusterName  = "example_proxy_cluster"
-	RouteName    = "local_route"
-	ListenerName = "listener_0"
-	ListenerPort = 10000
-	UpstreamHost = "127.0.0.1"
-	UpstreamPort = 8000
-)
-
 func makeCluster(clusterName string) *cluster.Cluster {
 	return &cluster.Cluster{
 		Name:                 clusterName,
@@ -52,26 +43,32 @@ func makeCluster(clusterName string) *cluster.Cluster {
 }
 
 func makeEndpoint(clusterName string) *endpoint.ClusterLoadAssignment {
-	return &endpoint.ClusterLoadAssignment{
-		ClusterName: clusterName,
-		Endpoints: []*endpoint.LocalityLbEndpoints{{
-			LbEndpoints: []*endpoint.LbEndpoint{{
-				HostIdentifier: &endpoint.LbEndpoint_Endpoint{
-					Endpoint: &endpoint.Endpoint{
-						Address: &core.Address{
-							Address: &core.Address_SocketAddress{
-								SocketAddress: &core.SocketAddress{
-									Protocol: core.SocketAddress_TCP,
-									Address:  UpstreamHost,
-									PortSpecifier: &core.SocketAddress_PortValue{
-										PortValue: UpstreamPort,
-									},
+	var endpoints []*endpoint.LbEndpoint
+
+	for _, e := range Clusters[clusterName].Endpoints {
+		endpoints = append(endpoints, &endpoint.LbEndpoint{
+			HostIdentifier: &endpoint.LbEndpoint_Endpoint{
+				Endpoint: &endpoint.Endpoint{
+					Address: &core.Address{
+						Address: &core.Address_SocketAddress{
+							SocketAddress: &core.SocketAddress{
+								Protocol: core.SocketAddress_TCP,
+								Address:  e.UpstreamHost,
+								PortSpecifier: &core.SocketAddress_PortValue{
+									PortValue: e.UpstreamPort,
 								},
 							},
 						},
 					},
 				},
-			}},
+			},
+		})
+	}
+
+	return &endpoint.ClusterLoadAssignment{
+		ClusterName: clusterName,
+		Endpoints: []*endpoint.LocalityLbEndpoints{{
+			LbEndpoints: endpoints,
 		}},
 	}
 }
@@ -93,9 +90,6 @@ func makeRoute(routeName string, clusterName string) *route.RouteConfiguration {
 						ClusterSpecifier: &route.RouteAction_Cluster{
 							Cluster: clusterName,
 						},
-						HostRewriteSpecifier: &route.RouteAction_HostRewriteLiteral{
-							HostRewriteLiteral: UpstreamHost,
-						},
 					},
 				},
 			}},
@@ -103,7 +97,7 @@ func makeRoute(routeName string, clusterName string) *route.RouteConfiguration {
 	}
 }
 
-func makeHTTPListener(listenerName string, route string) *listener.Listener {
+func makeHTTPListener(l *Listener) *listener.Listener {
 	// HTTP filter configuration
 	manager := &hcm.HttpConnectionManager{
 		CodecType:  hcm.HttpConnectionManager_AUTO,
@@ -111,7 +105,7 @@ func makeHTTPListener(listenerName string, route string) *listener.Listener {
 		RouteSpecifier: &hcm.HttpConnectionManager_Rds{
 			Rds: &hcm.Rds{
 				ConfigSource:    makeConfigSource(),
-				RouteConfigName: route,
+				RouteConfigName: l.Route,
 			},
 		},
 		HttpFilters: []*hcm.HttpFilter{{
@@ -124,14 +118,14 @@ func makeHTTPListener(listenerName string, route string) *listener.Listener {
 	}
 
 	return &listener.Listener{
-		Name: listenerName,
+		Name: l.Name,
 		Address: &core.Address{
 			Address: &core.Address_SocketAddress{
 				SocketAddress: &core.SocketAddress{
 					Protocol: core.SocketAddress_TCP,
-					Address:  "0.0.0.0",
+					Address:  l.Address,
 					PortSpecifier: &core.SocketAddress_PortValue{
-						PortValue: ListenerPort,
+						PortValue: l.Port,
 					},
 				},
 			},
@@ -165,18 +159,46 @@ func makeConfigSource() *core.ConfigSource {
 	return source
 }
 
-func GenerateSnapshot() cache.Snapshot {
-	t := time.Now()
-	return cache.NewSnapshot(
-		strconv.FormatInt(t.Unix(), 16),
+func GenerateSnapshot() error {
+	cache_id := time.Now().Unix()
+	clusters := []types.Resource{}
+	for _, elem := range Clusters {
+		clusters = append(clusters, makeCluster(elem.Name))
+	}
+
+	routes := []types.Resource{}
+	for _, elem := range Routes {
+		routes = append(routes, makeRoute(elem.Name, elem.Cluster))
+	}
+
+	listeners := []types.Resource{}
+	for _, elem := range Listeners {
+		listeners = append(listeners, makeHTTPListener(&elem))
+	}
+
+	snapshot := cache.NewSnapshot(
+		strconv.FormatInt(cache_id, 16),
 		[]types.Resource{}, // endpoints
 		//[]types.Resource{makeCluster(ClusterName)},
-		Clusters,
+		clusters,
 		//[]types.Resource{makeRoute(RouteName, ClusterName)},
-		Routes,
+		routes,
 		//[]types.Resource{makeHTTPListener(ListenerName, RouteName)},
-		Listeners,
+		listeners,
 		[]types.Resource{}, // runtimes
 		[]types.Resource{}, // secrets
 	)
+
+	if err := snapshot.Consistent(); err != nil {
+		l.Errorf("snapshot inconsistency: %+v\n%+v", snapshot, err)
+		return err
+	}
+
+	if err := SCache.SetSnapshot(nodeID, snapshot); err != nil {
+		l.Errorf("snapshot error %q for %+v", err, snapshot)
+		return err
+	} else {
+		return nil
+	}
+
 }

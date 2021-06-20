@@ -2,65 +2,72 @@ package main
 
 import (
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
 )
 
 func CInfo(c *gin.Context) {
-	c.JSON(http.StatusOK, "ok")
+	c.JSON(http.StatusOK, Clusters)
 }
 
 func AddListener(c *gin.Context) {
 	var data ListenerRequest
 	c.BindJSON(&data)
-	Listeners = append(Listeners, makeHTTPListener(data.Name, data.Route))
+	Listeners[data.Name] = Listener{data.Name, data.Address, data.Port, data.Route}
 
-	snapshot := GenerateSnapshot()
-
-	if err := snapshot.Consistent(); err != nil {
-		l.Errorf("snapshot inconsistency: %+v\n%+v", snapshot, err)
-		os.Exit(1)
-	}
-
-	if err := SCache.SetSnapshot(nodeID, snapshot); err != nil {
-		l.Errorf("snapshot error %q for %+v", err, snapshot)
-		os.Exit(1)
+	if _, ok := Routes[data.Route]; ok {
+		c.JSON(http.StatusCreated, "Listener created")
+		err := GenerateSnapshot()
+		if err != nil {
+			c.JSON(http.StatusOK, err)
+		}
+	} else {
+		c.JSON(http.StatusAccepted, "Listener created, but not started: route not found")
 	}
 }
 
 func AddCluster(c *gin.Context) {
 	var data ClusterRequest
 	c.BindJSON(&data)
-	Clusters = append(Clusters, makeCluster(data.Name))
-
-	snapshot := GenerateSnapshot()
-
-	if err := snapshot.Consistent(); err != nil {
-		l.Errorf("snapshot inconsistency: %+v\n%+v", snapshot, err)
-		os.Exit(1)
-	}
-
-	if err := SCache.SetSnapshot(nodeID, snapshot); err != nil {
-		l.Errorf("snapshot error %q for %+v", err, snapshot)
-		os.Exit(1)
+	if _, ok := Clusters[data.Name]; ok {
+		c.JSON(http.StatusAlreadyReported, "Cluster already created")
+	} else {
+		Clusters[data.Name] = Cluster{data.Name, EndpointsMap{}}
+		c.JSON(http.StatusCreated, "Cluster created")
+		err := GenerateSnapshot()
+		if err != nil {
+			c.JSON(http.StatusOK, err)
+		}
 	}
 }
 
 func AddRoute(c *gin.Context) {
 	var data RouteRequest
 	c.BindJSON(&data)
-	Routes = append(Routes, makeRoute(data.Name, data.ClusterName))
+	if _, ok := Routes[data.Name]; ok {
+		c.JSON(http.StatusAlreadyReported, "Route already created")
+	} else {
+		Routes[data.Name] = Route{data.Name, data.ClusterName}
+		c.JSON(http.StatusCreated, "Route created")
+		err := GenerateSnapshot()
+		if err != nil {
+			c.JSON(http.StatusOK, err)
+		}
+	}
+}
 
-	snapshot := GenerateSnapshot()
-
-	if err := snapshot.Consistent(); err != nil {
-		l.Errorf("snapshot inconsistency: %+v\n%+v", snapshot, err)
-		os.Exit(1)
+func AddEndpoint(c *gin.Context) {
+	var data EndpointRequest
+	c.BindJSON(&data)
+	if _, ok := Clusters[data.ClusterName]; ok {
+		Clusters[data.ClusterName].Endpoints[data.Name] = Endpoint{data.Host, data.Port}
+		c.JSON(http.StatusCreated, "Endpoint added")
+		err := GenerateSnapshot()
+		if err != nil {
+			c.JSON(http.StatusOK, err)
+		}
+	} else {
+		c.JSON(http.StatusFailedDependency, "cluster not found!")
 	}
 
-	if err := SCache.SetSnapshot(nodeID, snapshot); err != nil {
-		l.Errorf("snapshot error %q for %+v", err, snapshot)
-		os.Exit(1)
-	}
 }

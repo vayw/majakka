@@ -33,9 +33,9 @@ var (
 
 	nodeID string
 
-	Listeners ListenerList
-	Clusters  ClusterList
-	Routes    RouteList
+	Listeners ListenersMap
+	Clusters  ClustersMap
+	Routes    RoutesMap
 
 	SCache cache.SnapshotCache
 )
@@ -55,11 +55,16 @@ func init() {
 func main() {
 	flag.Parse()
 
+	Listeners = make(ListenersMap)
+	Clusters = make(ClustersMap)
+	Routes = make(RoutesMap)
+
 	controlapi := gin.Default()
 	controlapi.GET("/control/info", CInfo)
-	controlapi.POST("/control/addlistener", AddListener)
-	controlapi.POST("/control/addcluster", AddCluster)
-	controlapi.POST("/control/addroute", AddRoute)
+	controlapi.POST("/control/listener/add", AddListener)
+	controlapi.POST("/control/cluster/add", AddCluster)
+	controlapi.POST("/control/route/add", AddRoute)
+	controlapi.POST("/control/endpoint/add", AddEndpoint)
 
 	httpport := fmt.Sprintf(":8099")
 	go controlapi.Run(httpport)
