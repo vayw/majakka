@@ -14,7 +14,6 @@
 package main
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
@@ -25,8 +24,6 @@ import (
 	listener "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
 	route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	hcm "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
-	"github.com/envoyproxy/go-control-plane/pkg/cache/types"
-	"github.com/envoyproxy/go-control-plane/pkg/cache/v3"
 	"github.com/envoyproxy/go-control-plane/pkg/resource/v3"
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
 )
@@ -35,17 +32,24 @@ func makeCluster(clusterName string) *cluster.Cluster {
 	return &cluster.Cluster{
 		Name:                 clusterName,
 		ConnectTimeout:       ptypes.DurationProto(5 * time.Second),
-		ClusterDiscoveryType: &cluster.Cluster_Type{Type: cluster.Cluster_LOGICAL_DNS},
+		ClusterDiscoveryType: &cluster.Cluster_Type{Type: cluster.Cluster_EDS},
 		LbPolicy:             cluster.Cluster_ROUND_ROBIN,
-		LoadAssignment:       makeEndpoint(clusterName),
-		DnsLookupFamily:      cluster.Cluster_V4_ONLY,
+		//LoadAssignment:       makeEndpoint(clusterName),
+		DnsLookupFamily:  cluster.Cluster_V4_ONLY,
+		EdsClusterConfig: makeEDSCluster(),
 	}
 }
 
-func makeEndpoint(clusterName string) *endpoint.ClusterLoadAssignment {
+func makeEDSCluster() *cluster.Cluster_EdsClusterConfig {
+	return &cluster.Cluster_EdsClusterConfig{
+		EdsConfig: makeConfigSource(),
+	}
+}
+
+func makeEndpoint(cl *Cluster) *endpoint.ClusterLoadAssignment {
 	var endpoints []*endpoint.LbEndpoint
 
-	for _, e := range Clusters[clusterName].Endpoints {
+	for _, e := range cl.Endpoints {
 		endpoints = append(endpoints, &endpoint.LbEndpoint{
 			HostIdentifier: &endpoint.LbEndpoint_Endpoint{
 				Endpoint: &endpoint.Endpoint{
@@ -66,7 +70,7 @@ func makeEndpoint(clusterName string) *endpoint.ClusterLoadAssignment {
 	}
 
 	return &endpoint.ClusterLoadAssignment{
-		ClusterName: clusterName,
+		ClusterName: cl.Name,
 		Endpoints: []*endpoint.LocalityLbEndpoints{{
 			LbEndpoints: endpoints,
 		}},
@@ -157,48 +161,4 @@ func makeConfigSource() *core.ConfigSource {
 		},
 	}
 	return source
-}
-
-func GenerateSnapshot() error {
-	cache_id := time.Now().Unix()
-	clusters := []types.Resource{}
-	for _, elem := range Clusters {
-		clusters = append(clusters, makeCluster(elem.Name))
-	}
-
-	routes := []types.Resource{}
-	for _, elem := range Routes {
-		routes = append(routes, makeRoute(elem.Name, elem.Cluster))
-	}
-
-	listeners := []types.Resource{}
-	for _, elem := range Listeners {
-		listeners = append(listeners, makeHTTPListener(&elem))
-	}
-
-	snapshot := cache.NewSnapshot(
-		strconv.FormatInt(cache_id, 16),
-		[]types.Resource{}, // endpoints
-		//[]types.Resource{makeCluster(ClusterName)},
-		clusters,
-		//[]types.Resource{makeRoute(RouteName, ClusterName)},
-		routes,
-		//[]types.Resource{makeHTTPListener(ListenerName, RouteName)},
-		listeners,
-		[]types.Resource{}, // runtimes
-		[]types.Resource{}, // secrets
-	)
-
-	if err := snapshot.Consistent(); err != nil {
-		l.Errorf("snapshot inconsistency: %+v\n%+v", snapshot, err)
-		return err
-	}
-
-	if err := SCache.SetSnapshot(nodeID, snapshot); err != nil {
-		l.Errorf("snapshot error %q for %+v", err, snapshot)
-		return err
-	} else {
-		return nil
-	}
-
 }

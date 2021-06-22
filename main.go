@@ -25,7 +25,7 @@ import (
 )
 
 var (
-	l Logger
+	Log Logger
 
 	port     uint
 	basePort uint
@@ -33,17 +33,15 @@ var (
 
 	nodeID string
 
-	Listeners ListenersMap
-	Clusters  ClustersMap
-	Routes    RoutesMap
+	CF Configuration
 
 	SCache cache.SnapshotCache
 )
 
 func init() {
-	l = Logger{}
+	Log = Logger{}
 
-	flag.BoolVar(&l.Debug, "debug", false, "Enable xDS server debug logging")
+	flag.BoolVar(&Log.Debug, "debug", false, "Enable xDS server debug logging")
 
 	// The port that this xDS server listens on
 	flag.UintVar(&port, "port", 18000, "xDS management server port")
@@ -55,9 +53,11 @@ func init() {
 func main() {
 	flag.Parse()
 
-	Listeners = make(ListenersMap)
-	Clusters = make(ClustersMap)
-	Routes = make(RoutesMap)
+	CF = Configuration{
+		Clusters:  make(ClustersMap),
+		Listeners: make(ListenersMap),
+		Routes:    make(RoutesMap),
+	}
 
 	controlapi := gin.Default()
 	controlapi.GET("/control/info", CInfo)
@@ -70,11 +70,12 @@ func main() {
 	go controlapi.Run(httpport)
 
 	// Create a cache
-	SCache = cache.NewSnapshotCache(false, cache.IDHash{}, l)
+	SCache = cache.NewSnapshotCache(false, cache.IDHash{}, Log)
+	CF.SnapshotCache = &SCache
 
 	// Run the xDS server
 	ctx := context.Background()
-	cb := &test.Callbacks{Debug: l.Debug}
+	cb := &test.Callbacks{Debug: Log.Debug}
 	srv := server.NewServer(ctx, SCache, cb)
 	RunServer(ctx, srv, port)
 }
