@@ -14,6 +14,7 @@
 package main
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
@@ -24,6 +25,7 @@ import (
 	listener "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
 	route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	hcm "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
+	v3types "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	"github.com/envoyproxy/go-control-plane/pkg/resource/v3"
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
 )
@@ -50,23 +52,25 @@ func makeEndpoint(cl *Cluster) *endpoint.ClusterLoadAssignment {
 	var endpoints []*endpoint.LbEndpoint
 
 	for _, e := range cl.Endpoints {
-		endpoints = append(endpoints, &endpoint.LbEndpoint{
-			HostIdentifier: &endpoint.LbEndpoint_Endpoint{
-				Endpoint: &endpoint.Endpoint{
-					Address: &core.Address{
-						Address: &core.Address_SocketAddress{
-							SocketAddress: &core.SocketAddress{
-								Protocol: core.SocketAddress_TCP,
-								Address:  e.UpstreamHost,
-								PortSpecifier: &core.SocketAddress_PortValue{
-									PortValue: e.UpstreamPort,
+		if e.State == StateEnabled {
+			endpoints = append(endpoints, &endpoint.LbEndpoint{
+				HostIdentifier: &endpoint.LbEndpoint_Endpoint{
+					Endpoint: &endpoint.Endpoint{
+						Address: &core.Address{
+							Address: &core.Address_SocketAddress{
+								SocketAddress: &core.SocketAddress{
+									Protocol: core.SocketAddress_TCP,
+									Address:  e.UpstreamHost,
+									PortSpecifier: &core.SocketAddress_PortValue{
+										PortValue: e.UpstreamPort,
+									},
 								},
 							},
 						},
 					},
 				},
-			},
-		})
+			})
+		}
 	}
 
 	return &endpoint.ClusterLoadAssignment{
@@ -161,4 +165,18 @@ func makeConfigSource() *core.ConfigSource {
 		},
 	}
 	return source
+}
+
+func MakeMirroringConfig(cluster string, fraction uint32) *[]route.RouteAction_RequestMirrorPolicy {
+	return &[]route.RouteAction_RequestMirrorPolicy{
+		route.RouteAction_RequestMirrorPolicy{
+			Cluster: cluster,
+			RuntimeFraction: &core.RuntimeFractionalPercent{
+				DefaultValue: &v3types.FractionalPercent{
+					Numerator: fraction,
+				},
+				RuntimeKey: strconv.Itoa(int(fraction)),
+			},
+		},
+	}
 }

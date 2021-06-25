@@ -65,6 +65,9 @@ func main() {
 	controlapi.POST("/control/cluster/add", AddCluster)
 	controlapi.POST("/control/route/add", AddRoute)
 	controlapi.POST("/control/endpoint/add", AddEndpoint)
+	controlapi.POST("/control/endpoint/delete", DeleteEndpoint)
+	controlapi.POST("/control/endpoint/switch", SwitchEndpoint)
+	controlapi.POST("/control/mirroring/add", AddMirroring)
 
 	httpport := fmt.Sprintf(":8099")
 	go controlapi.Run(httpport)
