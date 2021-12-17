@@ -56,7 +56,7 @@ func main() {
 	CF = Configuration{
 		Clusters:  make(ClustersMap),
 		Listeners: make(ListenersMap),
-		Routes:    make(RoutesMap),
+		RouteConf: make(RouteConfMap),
 	}
 
 	controlapi := gin.Default()

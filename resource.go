@@ -167,9 +167,9 @@ func makeConfigSource() *core.ConfigSource {
 	return source
 }
 
-func MakeMirroringConfig(cluster string, fraction uint32) *[]route.RouteAction_RequestMirrorPolicy {
-	return &[]route.RouteAction_RequestMirrorPolicy{
-		route.RouteAction_RequestMirrorPolicy{
+func makeMirroringConfig(cluster string, fraction uint32) []*route.RouteAction_RequestMirrorPolicy {
+	return []*route.RouteAction_RequestMirrorPolicy{
+		{
 			Cluster: cluster,
 			RuntimeFraction: &core.RuntimeFractionalPercent{
 				DefaultValue: &v3types.FractionalPercent{
