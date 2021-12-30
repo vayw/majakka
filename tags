@@ -1,0 +1,148 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_OUTPUT_EXCMD	mixed	/number, pattern, mixed, or combineV2/
+!_TAG_OUTPUT_FILESEP	slash	/slash or backslash/
+!_TAG_OUTPUT_MODE	u-ctags	/u-ctags or e-ctags/
+!_TAG_PATTERN_LENGTH_LIMIT	96	/0 for no limit/
+!_TAG_PROC_CWD	/home/vayw/repos/majakka/	//
+!_TAG_PROGRAM_AUTHOR	Universal Ctags Team	//
+!_TAG_PROGRAM_NAME	Universal Ctags	/Derived from Exuberant Ctags/
+!_TAG_PROGRAM_URL	https://ctags.io/	/official site/
+!_TAG_PROGRAM_VERSION	5.9.0	//
+AddCluster	configurator.go	/^func (cf *Configuration) AddCluster(name string) error {$/;"	f	struct:main.Configuration	typeref:typename:error
+AddCluster	control.go	/^func AddCluster(c *gin.Context) {$/;"	f	package:main
+AddEndpoint	configurator.go	/^func (cf *Configuration) AddEndpoint(name, cluster, address string, port uint32) error {$/;"	f	struct:main.Configuration	typeref:typename:error
+AddEndpoint	control.go	/^func AddEndpoint(c *gin.Context) {$/;"	f	package:main
+AddListener	configurator.go	/^func (cf *Configuration) AddListener(name, address string, port uint32, route string) error {$/;"	f	struct:main.Configuration	typeref:typename:error
+AddListener	control.go	/^func AddListener(c *gin.Context) {$/;"	f	package:main
+AddMirroring	configurator.go	/^func (cf *Configuration) AddMirroring(routeconf, vhost, route, cluster string, fraction uint32) /;"	f	struct:main.Configuration	typeref:typename:error
+AddMirroring	control.go	/^func AddMirroring(c *gin.Context) {$/;"	f	package:main
+AddRoute	configurator.go	/^func (cf *Configuration) AddRoute(name string) error {$/;"	f	struct:main.Configuration	typeref:typename:error
+AddRoute	control.go	/^func AddRoute(c *gin.Context) {$/;"	f	package:main
+AddVHost	configurator.go	/^func (cf *Configuration) AddVHost(name, route string, domains []string, cluster string) error {$/;"	f	struct:main.Configuration	typeref:typename:error
+Address	configurator.go	/^	Address string$/;"	m	struct:main.Listener	typeref:typename:string
+Address	control.go	/^	Address     string `json:"address"`$/;"	m	struct:main.EndpointRequest	typeref:typename:string
+Address	control.go	/^	Address string `json:"address" binding:"required"`$/;"	m	struct:main.ListenerRequest	typeref:typename:string
+Assigments	configurator.go	/^	Assigments RouteAssigments$/;"	m	struct:main.RouteConf	typeref:typename:RouteAssigments
+CF	main.go	/^	CF Configuration$/;"	v	package:main	typeref:typename:Configuration
+CInfo	control.go	/^func CInfo(c *gin.Context) {$/;"	f	package:main
+CheckEndpoint	configurator.go	/^func (cf *Configuration) CheckEndpoint(name, cluster string) error {$/;"	f	struct:main.Configuration	typeref:typename:error
+Cluster	configurator.go	/^	Cluster string$/;"	m	struct:main.Route	typeref:typename:string
+Cluster	configurator.go	/^type Cluster struct {$/;"	s	package:main
+Cluster	control.go	/^	Cluster  string `json:"cluster"`$/;"	m	struct:main.MirrorRequest	typeref:typename:string
+ClusterName	control.go	/^	ClusterName string   `json:"cluster" binding:"required"`$/;"	m	struct:main.VHostRequest	typeref:typename:string
+ClusterName	control.go	/^	ClusterName string `json:"cluster" binding:"required"`$/;"	m	struct:main.EndpointRequest	typeref:typename:string
+ClusterRequest	control.go	/^type ClusterRequest struct {$/;"	s	package:main
+Clusters	configurator.go	/^	Clusters      ClustersMap$/;"	m	struct:main.Configuration	typeref:typename:ClustersMap
+ClustersMap	configurator.go	/^type ClustersMap map[string]*Cluster$/;"	t	package:main	typeref:typename:map[string]*Cluster
+Configuration	configurator.go	/^type Configuration struct {$/;"	s	package:main
+Debug	logger.go	/^	Debug bool$/;"	m	struct:main.Logger	typeref:typename:bool
+Debugf	logger.go	/^func (logger Logger) Debugf(format string, args ...interface{}) {$/;"	f	struct:main.Logger
+DeleteEndpoint	configurator.go	/^func (cf *Configuration) DeleteEndpoint(name, cluster string) error {$/;"	f	struct:main.Configuration	typeref:typename:error
+DeleteEndpoint	control.go	/^func DeleteEndpoint(c *gin.Context) {$/;"	f	package:main
+DeleteMirroring	configurator.go	/^func (cf *Configuration) DeleteMirroring(routeconf, vhost, route, cluster string) error {$/;"	f	struct:main.Configuration	typeref:typename:error
+DisableEndpoint	configurator.go	/^func (cf *Configuration) DisableEndpoint(name, cluster string) error {$/;"	f	struct:main.Configuration	typeref:typename:error
+Domains	configurator.go	/^	Domains []string$/;"	m	struct:main.VHost	typeref:typename:[]string
+Domains	control.go	/^	Domains     []string `json:"domains" binding:"required"`$/;"	m	struct:main.VHostRequest	typeref:typename:[]string
+EnableEndpoint	configurator.go	/^func (cf *Configuration) EnableEndpoint(name, cluster string) error {$/;"	f	struct:main.Configuration	typeref:typename:error
+Endpoint	configurator.go	/^type Endpoint struct {$/;"	s	package:main
+EndpointRequest	control.go	/^type EndpointRequest struct {$/;"	s	package:main
+Endpoints	configurator.go	/^	Endpoints EndpointsMap$/;"	m	struct:main.Cluster	typeref:typename:EndpointsMap
+EndpointsMap	configurator.go	/^type EndpointsMap map[string]*Endpoint$/;"	t	package:main	typeref:typename:map[string]*Endpoint
+Errorf	logger.go	/^func (logger Logger) Errorf(format string, args ...interface{}) {$/;"	f	struct:main.Logger
+Example xDS Server	README.md	/^# Example xDS Server$/;"	c
+Files	README.md	/^## Files$/;"	s	chapter:Example xDS Server
+Fraction	control.go	/^	Fraction uint32 `json:"fraction"`$/;"	m	struct:main.MirrorRequest	typeref:typename:uint32
+GenerateSnapshot	configurator.go	/^func (cf *Configuration) GenerateSnapshot() error {$/;"	f	struct:main.Configuration	typeref:typename:error
+Headers	configurator.go	/^	Headers map[string]string$/;"	m	struct:main.Route	typeref:typename:map[string]string
+Infof	logger.go	/^func (logger Logger) Infof(format string, args ...interface{}) {$/;"	f	struct:main.Logger
+Listener	configurator.go	/^type Listener struct {$/;"	s	package:main
+ListenerCheck	configurator.go	/^func (cf *Configuration) ListenerCheck(route string) {$/;"	f	struct:main.Configuration
+ListenerRequest	control.go	/^type ListenerRequest struct {$/;"	s	package:main
+Listeners	configurator.go	/^	Listeners     ListenersMap$/;"	m	struct:main.Configuration	typeref:typename:ListenersMap
+ListenersMap	configurator.go	/^type ListenersMap map[string]*Listener$/;"	t	package:main	typeref:typename:map[string]*Listener
+Log	main.go	/^	Log Logger$/;"	v	package:main	typeref:typename:Logger
+Logger	logger.go	/^type Logger struct {$/;"	s	package:main
+MirrorRequest	control.go	/^type MirrorRequest struct {$/;"	s	package:main
+Mirrors	configurator.go	/^	Mirrors map[string]uint32$/;"	m	struct:main.Route	typeref:typename:map[string]uint32
+Name	configurator.go	/^	Name       string$/;"	m	struct:main.RouteConf	typeref:typename:string
+Name	configurator.go	/^	Name      string$/;"	m	struct:main.Cluster	typeref:typename:string
+Name	configurator.go	/^	Name    string$/;"	m	struct:main.Listener	typeref:typename:string
+Name	configurator.go	/^	Name    string$/;"	m	struct:main.VHost	typeref:typename:string
+Name	control.go	/^	Name        string   `json:"name" binding:"required"`$/;"	m	struct:main.VHostRequest	typeref:typename:string
+Name	control.go	/^	Name        string `json:"name" binding:"required"`$/;"	m	struct:main.EndpointRequest	typeref:typename:string
+Name	control.go	/^	Name    string `json:"name" binding:"required"`$/;"	m	struct:main.ListenerRequest	typeref:typename:string
+Name	control.go	/^	Name string `json:"name" binding:"required"`$/;"	m	struct:main.ClusterRequest	typeref:typename:string
+Name	control.go	/^	Name string `json:"name" binding:"required"`$/;"	m	struct:main.RouteRequest	typeref:typename:string
+Port	configurator.go	/^	Port    uint32$/;"	m	struct:main.Listener	typeref:typename:uint32
+Port	control.go	/^	Port        uint32 `json:"port"`$/;"	m	struct:main.EndpointRequest	typeref:typename:uint32
+Port	control.go	/^	Port    uint32 `json:"port" binding:"required"`$/;"	m	struct:main.ListenerRequest	typeref:typename:uint32
+Prefix	configurator.go	/^	Prefix  string$/;"	m	struct:main.Route	typeref:typename:string
+Route	configurator.go	/^	Route   string$/;"	m	struct:main.Listener	typeref:typename:string
+Route	configurator.go	/^type Route struct {$/;"	s	package:main
+Route	control.go	/^	Route    string `json:"route"`$/;"	m	struct:main.MirrorRequest	typeref:typename:string
+Route	control.go	/^	Route   string `json:"route" binding:"required"`$/;"	m	struct:main.ListenerRequest	typeref:typename:string
+RouteAssigments	configurator.go	/^type RouteAssigments map[string]bool$/;"	t	package:main	typeref:typename:map[string]bool
+RouteAssign	configurator.go	/^func (cf *Configuration) RouteAssign(route, listener string) error {$/;"	f	struct:main.Configuration	typeref:typename:error
+RouteConf	configurator.go	/^	RouteConf     RouteConfMap$/;"	m	struct:main.Configuration	typeref:typename:RouteConfMap
+RouteConf	configurator.go	/^type RouteConf struct {$/;"	s	package:main
+RouteConfMap	configurator.go	/^type RouteConfMap map[string]*RouteConf$/;"	t	package:main	typeref:typename:map[string]*RouteConf
+RouteOk	configurator.go	/^func (cf *Configuration) RouteOk(name string) bool {$/;"	f	struct:main.Configuration	typeref:typename:bool
+RouteRequest	control.go	/^type RouteRequest struct {$/;"	s	package:main
+Routes	configurator.go	/^	Routes  VHostRoutes$/;"	m	struct:main.VHost	typeref:typename:VHostRoutes
+RunServer	server.go	/^func RunServer(ctx context.Context, srv server.Server, port uint) {$/;"	f	package:main
+SCache	main.go	/^	SCache cache.SnapshotCache$/;"	v	package:main	typeref:typename:cache.SnapshotCache
+SnapshotCache	configurator.go	/^	SnapshotCache *cache.SnapshotCache$/;"	m	struct:main.Configuration	typeref:typename:*cache.SnapshotCache
+State	configurator.go	/^	State        string$/;"	m	struct:main.Endpoint	typeref:typename:string
+State	configurator.go	/^	State   string$/;"	m	struct:main.Listener	typeref:typename:string
+StateDisabled	configurator.go	/^const StateDisabled = "disabled"$/;"	c	package:main
+StateEnabled	configurator.go	/^const StateEnabled = "enabled"$/;"	c	package:main
+Switch	control.go	/^	Switch      string `json:"switch"`$/;"	m	struct:main.EndpointRequest	typeref:typename:string
+SwitchEndpoint	control.go	/^func SwitchEndpoint(c *gin.Context) {$/;"	f	package:main
+TLS	configurator.go	/^	TLS     bool$/;"	m	struct:main.VHost	typeref:typename:bool
+TLSOnly	configurator.go	/^	TLSOnly bool$/;"	m	struct:main.VHost	typeref:typename:bool
+UpstreamHost	configurator.go	/^	UpstreamHost string$/;"	m	struct:main.Endpoint	typeref:typename:string
+UpstreamPort	configurator.go	/^	UpstreamPort uint32$/;"	m	struct:main.Endpoint	typeref:typename:uint32
+VHost	configurator.go	/^type VHost struct {$/;"	s	package:main
+VHostRequest	control.go	/^type VHostRequest struct {$/;"	s	package:main
+VHostRoutes	configurator.go	/^type VHostRoutes map[string]Route$/;"	t	package:main	typeref:typename:map[string]Route
+VHosts	configurator.go	/^	VHosts     map[string]*VHost$/;"	m	struct:main.RouteConf	typeref:typename:map[string]*VHost
+Warnf	logger.go	/^func (logger Logger) Warnf(format string, args ...interface{}) {$/;"	f	struct:main.Logger
+basePort	main.go	/^	basePort uint$/;"	v	package:main	typeref:typename:uint
+cluster	resource.go	/^	cluster "github.com\/envoyproxy\/go-control-plane\/envoy\/config\/cluster\/v3"$/;"	P	package:github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3
+clusterservice	server.go	/^	clusterservice "github.com\/envoyproxy\/go-control-plane\/envoy\/service\/cluster\/v3"$/;"	P	package:github.com/envoyproxy/go-control-plane/envoy/service/cluster/v3
+core	resource.go	/^	core "github.com\/envoyproxy\/go-control-plane\/envoy\/config\/core\/v3"$/;"	P	package:github.com/envoyproxy/go-control-plane/envoy/config/core/v3
+discoverygrpc	server.go	/^	discoverygrpc "github.com\/envoyproxy\/go-control-plane\/envoy\/service\/discovery\/v3"$/;"	P	package:github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3
+endpoint	resource.go	/^	endpoint "github.com\/envoyproxy\/go-control-plane\/envoy\/config\/endpoint\/v3"$/;"	P	package:github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3
+endpointservice	server.go	/^	endpointservice "github.com\/envoyproxy\/go-control-plane\/envoy\/service\/endpoint\/v3"$/;"	P	package:github.com/envoyproxy/go-control-plane/envoy/service/endpoint/v3
+grpcMaxConcurrentStreams	server.go	/^	grpcMaxConcurrentStreams = 1000000$/;"	c	package:main
+hcm	resource.go	/^	hcm "github.com\/envoyproxy\/go-control-plane\/envoy\/extensions\/filters\/network\/http_connec/;"	P	package:github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3
+init	main.go	/^func init() {$/;"	f	package:main
+listener	resource.go	/^	listener "github.com\/envoyproxy\/go-control-plane\/envoy\/config\/listener\/v3"$/;"	P	package:github.com/envoyproxy/go-control-plane/envoy/config/listener/v3
+listenerservice	server.go	/^	listenerservice "github.com\/envoyproxy\/go-control-plane\/envoy\/service\/listener\/v3"$/;"	P	package:github.com/envoyproxy/go-control-plane/envoy/service/listener/v3
+main	configurator.go	/^package main$/;"	p
+main	control.go	/^package main$/;"	p
+main	logger.go	/^package main$/;"	p
+main	main.go	/^func main() {$/;"	f	package:main
+main	main.go	/^package main$/;"	p
+main	resource.go	/^package main$/;"	p
+main	server.go	/^package main$/;"	p
+majakka	README.md	/^# majakka$/;"	c
+makeCluster	resource.go	/^func makeCluster(clusterName string) *cluster.Cluster {$/;"	f	package:main	typeref:typename:*cluster.Cluster
+makeConfigSource	resource.go	/^func makeConfigSource() *core.ConfigSource {$/;"	f	package:main	typeref:typename:*core.ConfigSource
+makeEDSCluster	resource.go	/^func makeEDSCluster() *cluster.Cluster_EdsClusterConfig {$/;"	f	package:main	typeref:typename:*cluster.Cluster_EdsClusterConfig
+makeEndpoint	resource.go	/^func makeEndpoint(cl *Cluster) *endpoint.ClusterLoadAssignment {$/;"	f	package:main	typeref:typename:*endpoint.ClusterLoadAssignment
+makeHTTPListener	resource.go	/^func makeHTTPListener(l *Listener) *listener.Listener {$/;"	f	package:main	typeref:typename:*listener.Listener
+makeMirroringConfig	resource.go	/^func makeMirroringConfig(cluster string, fraction uint32) *route.RouteAction_RequestMirrorPolicy/;"	f	package:main	typeref:typename:*route.RouteAction_RequestMirrorPolicy
+makeRoute	resource.go	/^func makeRoute(routeName string) *route.RouteConfiguration {$/;"	f	package:main	typeref:typename:*route.RouteConfiguration
+makeVHost	resource.go	/^func makeVHost(vh VHost) *route.VirtualHost {$/;"	f	package:main	typeref:typename:*route.VirtualHost
+makeVHostRoutes	resource.go	/^func makeVHostRoutes(routes VHostRoutes) (routes_group []*route.Route) {$/;"	f	package:main	typeref:typename:(routes_group []*route.Route)
+mode	main.go	/^	mode     string$/;"	v	package:main	typeref:typename:string
+nodeID	main.go	/^	nodeID string$/;"	v	package:main	typeref:typename:string
+port	main.go	/^	port     uint$/;"	v	package:main	typeref:typename:uint
+registerServer	server.go	/^func registerServer(grpcServer *grpc.Server, server server.Server) {$/;"	f	package:main
+route	resource.go	/^	route "github.com\/envoyproxy\/go-control-plane\/envoy\/config\/route\/v3"$/;"	P	package:github.com/envoyproxy/go-control-plane/envoy/config/route/v3
+routeservice	server.go	/^	routeservice "github.com\/envoyproxy\/go-control-plane\/envoy\/service\/route\/v3"$/;"	P	package:github.com/envoyproxy/go-control-plane/envoy/service/route/v3
+runtimeservice	server.go	/^	runtimeservice "github.com\/envoyproxy\/go-control-plane\/envoy\/service\/runtime\/v3"$/;"	P	package:github.com/envoyproxy/go-control-plane/envoy/service/runtime/v3
+secretservice	server.go	/^	secretservice "github.com\/envoyproxy\/go-control-plane\/envoy\/service\/secret\/v3"$/;"	P	package:github.com/envoyproxy/go-control-plane/envoy/service/secret/v3
+v3types	resource.go	/^	v3types "github.com\/envoyproxy\/go-control-plane\/envoy\/type\/v3"$/;"	P	package:github.com/envoyproxy/go-control-plane/envoy/type/v3

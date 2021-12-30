@@ -2,11 +2,7 @@ package main
 
 import (
 	"errors"
-	"strconv"
-	"time"
 
-	route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
-	"github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	"github.com/envoyproxy/go-control-plane/pkg/cache/v3"
 )
 
@@ -18,28 +14,24 @@ type RouteConfMap map[string]*RouteConf
 type ListenersMap map[string]*Listener
 type EndpointsMap map[string]*Endpoint
 type RouteAssigments map[string]bool
-type Mirrors map[string]uint32
-type VirtualHosts map[string]*VHost
+type VHostRoutes map[string]Route
+type VHosts map[string]VHost
 
 type VHost struct {
-	Name    string
-	Domains []string
-	Routes  []route.Route
+	Name        string
+	Type        string
+	Domains     []string
+	TLSOnly     bool
+	Routes      VHostRoutes
+	TLSCertPath string
+	TLSKeyPath  string
 }
 
-type Listener struct {
-	Name    string
-	Address string
-	Port    uint32
-	Route   string
-	State   string
-}
-
-type RouteConf struct {
-	Name       string
-	Assigments RouteAssigments
-	Mirroring  Mirrors
-	Cluster    string
+type Route struct {
+	Prefix  string
+	Headers map[string]string
+	Cluster string
+	Mirrors map[string]uint32
 }
 
 type Endpoint struct {
@@ -57,10 +49,11 @@ type Configuration struct {
 	Clusters      ClustersMap
 	RouteConf     RouteConfMap
 	Listeners     ListenersMap
+	VirtualHosts  VHosts
 	SnapshotCache *cache.SnapshotCache
 }
 
-func (cf Configuration) AddCluster(name string) error {
+func (cf *Configuration) AddCluster(name string) error {
 	if _, ok := cf.Clusters[name]; ok {
 		return errors.New("Cluster already exists")
 	} else {
@@ -69,7 +62,7 @@ func (cf Configuration) AddCluster(name string) error {
 	}
 }
 
-func (cf Configuration) AddEndpoint(name, cluster, address string, port uint32) error {
+func (cf *Configuration) AddEndpoint(name, cluster, address string, port uint32) error {
 	if _, ok := cf.Clusters[cluster]; ok {
 		cf.Clusters[cluster].Endpoints[name] = &Endpoint{address, port, StateEnabled}
 	} else {
@@ -80,7 +73,7 @@ func (cf Configuration) AddEndpoint(name, cluster, address string, port uint32) 
 	return err
 }
 
-func (cf Configuration) CheckEndpoint(name, cluster string) error {
+func (cf *Configuration) CheckEndpoint(name, cluster string) error {
 	if _, ok := cf.Clusters[cluster]; ok {
 		if _, ok = cf.Clusters[cluster].Endpoints[name]; ok {
 			return nil
@@ -92,7 +85,7 @@ func (cf Configuration) CheckEndpoint(name, cluster string) error {
 	}
 }
 
-func (cf Configuration) DeleteEndpoint(name, cluster string) error {
+func (cf *Configuration) DeleteEndpoint(name, cluster string) error {
 	err := cf.CheckEndpoint(name, cluster)
 	if err != nil {
 		return err
@@ -103,7 +96,7 @@ func (cf Configuration) DeleteEndpoint(name, cluster string) error {
 	}
 }
 
-func (cf Configuration) DisableEndpoint(name, cluster string) error {
+func (cf *Configuration) DisableEndpoint(name, cluster string) error {
 	err := cf.CheckEndpoint(name, cluster)
 	if err != nil {
 		return err
@@ -114,7 +107,7 @@ func (cf Configuration) DisableEndpoint(name, cluster string) error {
 	}
 }
 
-func (cf Configuration) EnableEndpoint(name, cluster string) error {
+func (cf *Configuration) EnableEndpoint(name, cluster string) error {
 	err := cf.CheckEndpoint(name, cluster)
 	if err != nil {
 		return err
@@ -125,40 +118,39 @@ func (cf Configuration) EnableEndpoint(name, cluster string) error {
 	}
 }
 
-func (cf Configuration) AddRoute(name, cluster string) error {
+func (cf *Configuration) AddRouteConf(name string) error {
 	if _, ok := cf.RouteConf[name]; ok {
 		return errors.New("Route already exists")
 	} else {
 		cf.RouteConf[name] = &RouteConf{
 			Name:       name,
 			Assigments: make(RouteAssigments),
-			Cluster:    cluster,
-			Mirroring:  make(Mirrors),
 		}
-		cf.ListenerCheck(name)
+		cf.ProcessListenerStates(name)
 		err := cf.GenerateSnapshot()
 		return err
 	}
 }
 
-func (cf Configuration) RouteOk(name string) bool {
+func (cf *Configuration) RouteConfUsable(name string) bool {
 	if _, ok := cf.RouteConf[name]; ok {
-		return true
-	} else {
-		return false
+		if len(cf.RouteConf[name].VHosts) > 0 {
+			return true
+		}
 	}
+	return false
 }
 
-func (cf Configuration) RouteAssign(route, listener string) error {
+func (cf *Configuration) RouteAssign(route, listener string) error {
 	cf.RouteConf[route].Assigments[listener] = true
 	return nil
 }
 
-func (cf Configuration) AddListener(name, address string, port uint32, route string) error {
+func (cf *Configuration) AddListener(name, address string, port uint32, route string) error {
 	if _, ok := cf.Listeners[name]; ok {
 		return errors.New("Listener already exists")
 	} else {
-		if cf.RouteOk(route) {
+		if cf.RouteConfUsable(route) {
 			cf.Listeners[name] = &Listener{name, address, port, route, StateEnabled}
 			_ = cf.RouteAssign(route, name)
 		} else {
@@ -169,75 +161,34 @@ func (cf Configuration) AddListener(name, address string, port uint32, route str
 	}
 }
 
-func (cf Configuration) ListenerCheck(route string) {
+func (cf *Configuration) ProcessListenerStates(route string) {
 	for _, l := range cf.Listeners {
-		if l.State == StateDisabled {
-			if _, ok := cf.RouteConf[l.Route]; ok {
-				l.State = StateEnabled
-				cf.RouteConf[route].Assigments[l.Name] = true
-			}
+		if l.Route == route && l.State == StateDisabled && cf.RouteConfUsable(l.Route) {
+			l.State = StateEnabled
+			cf.RouteConf[route].Assigments[l.Name] = true
 		}
 	}
 }
 
-func (cf Configuration) AddMirroring(route, cluster string, fraction uint32) error {
-	cf.RouteConf[route].Mirroring[cluster] = fraction
+func (cf *Configuration) AddMirroring(routeconf, vhost, route, cluster string, fraction uint32) error {
+	cf.RouteConf[routeconf].VHosts[vhost].Routes[route].Mirrors[cluster] = fraction
 	err := cf.GenerateSnapshot()
 	return err
 }
 
-func (cf Configuration) GenerateSnapshot() error {
-	var endpoints, clusters, routes, listeners []types.Resource
-	for _, elem := range cf.Clusters {
-		clusters = append(clusters, makeCluster(elem.Name))
-		endpoints = append(endpoints, makeEndpoint(elem))
-	}
+func (cf *Configuration) DeleteMirroring(routeconf, vhost, route, cluster string) error {
+	delete(cf.RouteConf[routeconf].VHosts[vhost].Routes[route].Mirrors, cluster)
+	err := cf.GenerateSnapshot()
+	return err
+}
 
-	for _, elem := range cf.RouteConf {
-		if len(elem.Assigments) > 0 && len(elem.Cluster) > 0 {
-			r := makeRoute(elem.Name, elem.Cluster)
-			if len(elem.Mirroring) > 0 {
-				var m []*route.RouteAction_RequestMirrorPolicy
-				for mirror, fraction := range elem.Mirroring {
-					m = makeMirroringConfig(mirror, fraction)
-				}
-				r.VirtualHosts[0].Routes[0].GetRoute().RequestMirrorPolicies = m
-			}
-			routes = append(routes, r)
-		} else {
-			Log.Infof("route %s has 0 assigments, skipping", elem.Name)
+func (cf *Configuration) AddVHost(name, vhosttype string) error {
+	if err, ok := cf.VirtualHosts[name]; !ok {
+		cf.VirtualHosts[name] = VHost{
+			Name: name,
+			Type: vhosttype,
 		}
+		err := cf.GenerateSnapshot()
 	}
-
-	for _, elem := range cf.Listeners {
-		if elem.State == StateEnabled {
-			listeners = append(listeners, makeHTTPListener(elem))
-		} else {
-			Log.Infof("listener '%s' is disabled, skipping", elem.Name)
-		}
-	}
-
-	cache_id := time.Now().Unix()
-	snapshot := cache.NewSnapshot(
-		strconv.FormatInt(cache_id, 16),
-		endpoints,
-		clusters,
-		routes,
-		listeners,
-		[]types.Resource{}, // runtimes
-		[]types.Resource{}, // secrets
-	)
-
-	if err := snapshot.Consistent(); err != nil {
-		Log.Errorf("snapshot inconsistency: %+v\n%+v", snapshot, err)
-		return err
-	}
-
-	scache := *cf.SnapshotCache
-	if err := scache.SetSnapshot(nodeID, snapshot); err != nil {
-		Log.Errorf("snapshot error %q for %+v", err, snapshot)
-		return err
-	} else {
-		return nil
-	}
+	return err
 }

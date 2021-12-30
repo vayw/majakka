@@ -81,28 +81,47 @@ func makeEndpoint(cl *Cluster) *endpoint.ClusterLoadAssignment {
 	}
 }
 
-func makeRoute(routeName string, clusterName string) *route.RouteConfiguration {
+func makeRoute(routeName string) *route.RouteConfiguration {
 	return &route.RouteConfiguration{
-		Name: routeName,
-		VirtualHosts: []*route.VirtualHost{{
-			Name:    "local_service",
-			Domains: []string{"*"},
-			Routes: []*route.Route{{
-				Match: &route.RouteMatch{
-					PathSpecifier: &route.RouteMatch_Prefix{
-						Prefix: "/",
-					},
-				},
-				Action: &route.Route_Route{
-					Route: &route.RouteAction{
-						ClusterSpecifier: &route.RouteAction_Cluster{
-							Cluster: clusterName,
-						},
-					},
-				},
-			}},
-		}},
+		Name:         routeName,
+		VirtualHosts: []*route.VirtualHost{},
 	}
+}
+
+func makeVHost(vh VHost) *route.VirtualHost {
+	return &route.VirtualHost{
+		Name:    vh.Name,
+		Domains: vh.Domains,
+		Routes:  makeVHostRoutes(vh.Routes),
+	}
+}
+
+func makeVHostRoutes(routes VHostRoutes) (routes_group []*route.Route) {
+	for _, r := range routes {
+		newroute := &route.Route{
+			Match: &route.RouteMatch{
+				PathSpecifier: &route.RouteMatch_Prefix{
+					Prefix: r.Prefix,
+				},
+			},
+			Action: &route.Route_Route{
+				Route: &route.RouteAction{
+					ClusterSpecifier: &route.RouteAction_Cluster{
+						Cluster: r.Cluster,
+					},
+				},
+			},
+		}
+		if len(r.Mirrors) > 0 {
+			var m []*route.RouteAction_RequestMirrorPolicy
+			for mirror, fraction := range r.Mirrors {
+				m = append(m, makeMirroringConfig(mirror, fraction))
+			}
+			newroute.GetRoute().RequestMirrorPolicies = m
+		}
+		routes_group = append(routes_group, newroute)
+	}
+	return
 }
 
 func makeHTTPListener(l *Listener) *listener.Listener {
@@ -167,16 +186,14 @@ func makeConfigSource() *core.ConfigSource {
 	return source
 }
 
-func makeMirroringConfig(cluster string, fraction uint32) []*route.RouteAction_RequestMirrorPolicy {
-	return []*route.RouteAction_RequestMirrorPolicy{
-		{
-			Cluster: cluster,
-			RuntimeFraction: &core.RuntimeFractionalPercent{
-				DefaultValue: &v3types.FractionalPercent{
-					Numerator: fraction,
-				},
-				RuntimeKey: strconv.Itoa(int(fraction)),
+func makeMirroringConfig(cluster string, fraction uint32) *route.RouteAction_RequestMirrorPolicy {
+	return &route.RouteAction_RequestMirrorPolicy{
+		Cluster: cluster,
+		RuntimeFraction: &core.RuntimeFractionalPercent{
+			DefaultValue: &v3types.FractionalPercent{
+				Numerator: fraction,
 			},
+			RuntimeKey: strconv.Itoa(int(fraction)),
 		},
 	}
 }

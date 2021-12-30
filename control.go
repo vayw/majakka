@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -32,10 +31,10 @@ func AddCluster(c *gin.Context) {
 	}
 }
 
-func AddRoute(c *gin.Context) {
+func AddRouteConf(c *gin.Context) {
 	var data RouteRequest
 	c.BindJSON(&data)
-	if err := CF.AddRoute(data.Name, data.ClusterName); err != nil {
+	if err := CF.AddRouteConf(data.Name); err != nil {
 		c.JSON(http.StatusAlreadyReported, err)
 	} else {
 		c.JSON(http.StatusCreated, "Route created")
@@ -45,7 +44,9 @@ func AddRoute(c *gin.Context) {
 func AddEndpoint(c *gin.Context) {
 	var data EndpointRequest
 	err := c.BindJSON(&data)
-	fmt.Println(err)
+	if err != nil {
+		Log.Errorf("%s", err)
+	}
 	if err := CF.AddEndpoint(data.Name, data.ClusterName, data.Address, data.Port); err == nil {
 		c.JSON(http.StatusCreated, "Endpoint added")
 	} else {
@@ -89,7 +90,7 @@ func SwitchEndpoint(c *gin.Context) {
 func AddMirroring(c *gin.Context) {
 	var data MirrorRequest
 	c.BindJSON(&data)
-	err := CF.AddMirroring(data.Route, data.Cluster, data.Fraction)
+	err := CF.AddMirroring(data.RouteConf, data.VHost, data.Route, data.Cluster, data.Fraction)
 	if err != nil {
 		c.JSON(http.StatusOK, err)
 	} else {
@@ -98,9 +99,11 @@ func AddMirroring(c *gin.Context) {
 }
 
 type MirrorRequest struct {
-	Route    string `json:"route"`
-	Cluster  string `json:"cluster"`
-	Fraction uint32 `json:"fraction"`
+	RouteConf string `json:"routeconf" binding:"required"`
+	VHost     string `json:"vhost" binding:"required"`
+	Route     string `json:"route" binding:"required"`
+	Cluster   string `json:"cluster" binding:"required"`
+	Fraction  uint32 `json:"fraction" binding:"required"`
 }
 
 type EndpointRequest struct {
@@ -123,6 +126,15 @@ type ClusterRequest struct {
 }
 
 type RouteRequest struct {
-	Name        string `json:"name" binding:"required"`
-	ClusterName string `json:"cluster" binding:"required"`
+	Name string `json:"name" binding:"required"`
+}
+
+type VHostRequest struct {
+	Name        string      `json:"name" binding:"required"`
+	RouteConf   string      `json:"routeconf" binding:"required"`
+	Domains     []string    `json:"domains" binding:"required"`
+	TLSOnly     bool        `json:"tlsonly"`
+	TLSCertPath string      `json:"tlscertpath"`
+	TLSKeyPath  string      `json:"tlskeypath"`
+	Routes      VHostRoutes `json:"cluster" binding:"required"`
 }
